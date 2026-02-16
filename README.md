@@ -1,30 +1,46 @@
-# React + TypeScript + Vite
+# Chamber.Law Desktop
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Desktop sidekick client for Chamber.Law, built with Electron + React + TypeScript.
 
-Currently, two official plugins are available:
+## What it does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Authenticates against the Chamber backend
+- Connects to `/sidekick` Socket.IO namespace
+- Streams local watcher status/file activity to the sidekick channel
+- Provides desktop UI for connection health and activity feed
 
-## Expanding the ESLint configuration
+## Environment
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+Create and edit `.env` in this folder:
 
-- Configure the top-level `parserOptions` property like this:
+- `VITE_API_URL` — backend API base (e.g. `http://localhost:5100/api/v1`)
+- `VITE_SOCKET_URL` (optional) — explicit socket base (e.g. `http://localhost:5100`)
+- `VITE_SOCKET_RECONNECT_ATTEMPTS`
+- `VITE_SOCKET_RECONNECT_DELAY_MS`
+- `VITE_SOCKET_RECONNECT_MAX_DELAY_MS`
+- `VITE_SOCKET_TIMEOUT_MS`
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+Use `.env.example` as the starting template.
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+## Development
+
+1. Install dependencies
+2. Set `.env`
+3. Run dev server
+
+## Build
+
+- `npm run build` builds renderer + electron artifacts and packages desktop app.
+
+## Security notes
+
+- Desktop/session tokens are stored through Electron IPC secure-store handlers.
+- When Electron `safeStorage` is available, values are encrypted at rest.
+- If unavailable, secure-store falls back to local plaintext values on disk.
+
+## Current maturity
+
+- Env-driven API/socket endpoints: ✅
+- Reconnect diagnostics/backoff: ✅
+- Basic token persistence with secure IPC path: ✅
+- Offline queue/replay + conflict management: ⏳ pending

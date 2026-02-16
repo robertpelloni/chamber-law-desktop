@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { runtimeConfig } from '../lib/runtimeConfig';
+import { clearSidekickToken, getSidekickToken, setSidekickToken } from '../lib/tokenStorage';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -13,20 +15,29 @@ export const Sidekick = () => {
     const [apiKey, setApiKey] = useState('');
     const bottomRef = useRef<HTMLDivElement>(null);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5100/api/v1';
+    const API_URL = runtimeConfig.apiBaseUrl;
 
     useEffect(() => {
-        const storedKey = localStorage.getItem('chamber_api_key');
-        if (storedKey) setApiKey(storedKey);
+        let mounted = true;
+        async function loadToken() {
+            const storedKey = await getSidekickToken();
+            if (storedKey && mounted) setApiKey(storedKey);
+        }
+
+        loadToken();
+
+        return () => {
+            mounted = false;
+        }
     }, []);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    const handleSaveKey = () => {
+    const handleSaveKey = async () => {
         if (input.trim()) {
-            localStorage.setItem('chamber_api_key', input.trim());
+            await setSidekickToken(input.trim());
             setApiKey(input.trim());
             setInput('');
         }
@@ -53,7 +64,7 @@ export const Sidekick = () => {
             if (!res.ok) {
                 if (res.status === 401) {
                     setApiKey(''); // Reset key if unauthorized
-                    localStorage.removeItem('chamber_api_key');
+                    await clearSidekickToken();
                     throw new Error("Unauthorized. Please re-enter API Key.");
                 }
                 throw new Error("Failed to fetch response");
